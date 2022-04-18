@@ -5,7 +5,7 @@ using Entities.Concrete;
 
 namespace DataAccess.Concrete.EntityFramework
 {
-    public class EfMailParameterDal : EfEntityRepositoryBase<MailParameter,ContextDb>, IMailParameter{
+    public class EfMailParameterDal : EfEntityRepositoryBase<MailParameter,ContextDb>, IMailParameterDal{
         
     }
 }

@@ -3,7 +3,7 @@ using Entities.Concrete;
 
 namespace DataAccess.Abstract
 {
-    public interface IMailParameter : IEntityRepository<MailParameter>{
+    public interface IMailParameterDal : IEntityRepository<MailParameter>{
         
     }
 }
