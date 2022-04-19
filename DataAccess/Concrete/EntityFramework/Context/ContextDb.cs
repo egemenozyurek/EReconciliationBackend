@@ -6,7 +6,7 @@ namespace DataAccess.Concrete.EntityFramework.Context{
     public class ContextDb : DbContext{
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlServer(@"Server=DESKTOP-L7N7CID; Database=eReconciliationDb; Integrated Security = true");
+            optionsBuilder.UseSqlServer(@"Server=DESKTOP-L7N7CID\MSSQLSERVEREXPRE; Database=eReconciliationDb; Integrated Security = true");
         }
 
         public DbSet<AccountReconciliation> AccountReconciliations {get; set;}
