@@ -34,7 +34,7 @@ namespace Business.Concrete
 
         public IDataResult<Company> GetById(int id)
         {
-            throw new NotImplementedException();
+            return new SuccessDataResult<Company>(_companyDal.Get(p => p.Id == id));
         }
 
         public IDataResult<UserCompany> GetCompany(int userId)
