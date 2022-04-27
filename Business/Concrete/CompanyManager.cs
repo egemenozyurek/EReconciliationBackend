@@ -29,7 +29,12 @@ namespace Business.Concrete
 
         public IResult CompanyExists(Company company)
         {
-            throw new NotImplementedException();
+            var result = _companyDal.Get(c => c.Name == company.Name && c.TaxDepartment == company.TaxDepartment && c.TaxIdNumber == company.TaxIdNumber && c.IdentityNumber == company.IdentityNumber);
+
+            if(result is not null)
+                return new ErrorResult(Messages.CompanyAlreadyExists);
+
+            return new SuccessResult();
         }
 
         public IDataResult<Company> GetById(int id)
@@ -39,7 +44,7 @@ namespace Business.Concrete
 
         public IDataResult<UserCompany> GetCompany(int userId)
         {
-            throw new NotImplementedException();
+            return new SuccessDataResult<UserCompany>(_companyDal.GetCompany(userId));
         }
 
         public IDataResult<List<Company>> GetList()
@@ -49,17 +54,19 @@ namespace Business.Concrete
 
         public IDataResult<List<Company>> GetListByUserId(int userId)
         {
-            throw new NotImplementedException();
+            return new SuccessDataResult<List<Company>>(_companyDal.GetListByUserId(userId));
         }
 
         public IResult Update(Company company)
         {
-            throw new NotImplementedException();
+            _companyDal.Update(company);
+            return new SuccessResult(Messages.UpdatedCompany);
         }
 
         public IResult UserCompanyAdd(int userId, int companyId)
         {
-            throw new NotImplementedException();
+            _companyDal.UserCompanyAdd(userId,companyId);
+            return new SuccessResult();
         }
     }
 }
