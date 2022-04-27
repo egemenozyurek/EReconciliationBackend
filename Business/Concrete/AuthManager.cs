@@ -20,8 +20,10 @@ namespace Business.Concrete
         private readonly IMailTemplateService _mailTemplateService;
         private readonly IOperationClaimService _operationClaimService;
         private readonly IUserOperationClaimService _userOperationClaimService;
+        private readonly IUserRelationshipService _userRelationshipService;
+        private readonly IUserThemeOptionService _userThemeOptionService;
 
-        public AuthManager(IUserService userService, ITokenHelper tokenHelper, ICompanyService companyService, IMailService mailService, IMailParameterService mailParameterService, IMailTemplateService mailTemplateService, IOperationClaimService operationClaimService, IUserOperationClaimService userOperationClaimService)
+        public AuthManager(IUserService userService, ITokenHelper tokenHelper, ICompanyService companyService, IMailService mailService, IMailParameterService mailParameterService, IMailTemplateService mailTemplateService, IOperationClaimService operationClaimService, IUserOperationClaimService userOperationClaimService, IUserRelationshipService userRelationshipService, IUserThemeOptionService userThemeOptionService)
         {
             _userService = userService;
             _tokenHelper = tokenHelper;
@@ -31,6 +33,8 @@ namespace Business.Concrete
             _mailTemplateService = mailTemplateService;
             _operationClaimService = operationClaimService;
             _userOperationClaimService = userOperationClaimService;
+            _userRelationshipService = userRelationshipService;
+            _userThemeOptionService = userThemeOptionService;
         }
 
         public IResult ChangePassword(User user)
@@ -184,7 +188,7 @@ namespace Business.Concrete
 
         public IDataResult<List<UserRelationshipDto>> RegisterSecondAccount(UserForRegister userForRegister, string password, int companyId, int adminUserId)
         {
-            byte[] passwordHash, passwordSalt;
+             byte[] passwordHash, passwordSalt;
             HashingHelper.CreatePasswordHash(password, out passwordHash, out passwordSalt);
             var user = new User()
             {
@@ -220,9 +224,29 @@ namespace Business.Concrete
                 }
             }
 
+            UserRelationship userReletionship = new UserRelationship
+            {
+                UserUserId = user.Id,
+                AdminUserId = adminUserId
+            };
+
+            _userRelationshipService.Add(userReletionship);
+
+            var result = _userRelationshipService.GetListDto(adminUserId).Data;
+
+            UserThemeOption userThemeOption = new UserThemeOption()
+            {
+                UserId = user.Id,
+                SidenavColor = "primary",
+                SidenavType = "dark",
+                Mode = ""
+            };
+
+            _userThemeOptionService.Update(userThemeOption);
+
             SendConfirmEmail(user);
 
-            return new SuccessDataResult<List<UserRelationshipDto>>(user, Messages.UserRegistered);
+            return new SuccessDataResult<List<UserRelationshipDto>>(result, Messages.UserRegistered);
         }
 
         public IResult SendConfirmEmailAgain(User user)
