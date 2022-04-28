@@ -1,5 +1,7 @@
 using Business.Abstract;
 using Business.Constants;
+using Business.ValidationRules.FluentValidation;
+using Core.CrossCuttingConcerns.Validation;
 using Core.Entities.Concrete;
 using Core.Utilities.Hashing;
 using Core.Utilities.Results.Abstract;
@@ -7,6 +9,7 @@ using Core.Utilities.Results.Concrete;
 using Core.Utilities.Security.JWT;
 using Entities.Concrete;
 using Entities.Dtos;
+using FluentValidation;
 
 namespace Business.Concrete
 {
@@ -114,6 +117,9 @@ namespace Business.Concrete
                 Name = userForRegister.Name
             };
 
+            ValidationTool.Validate(new UserValidator(), user);
+            ValidationTool.Validate(new CompanyValidator(), company);
+
             _userService.Add(user);
             _companyService.Add(company);
 
@@ -188,7 +194,7 @@ namespace Business.Concrete
 
         public IDataResult<List<UserRelationshipDto>> RegisterSecondAccount(UserForRegister userForRegister, string password, int companyId, int adminUserId)
         {
-             byte[] passwordHash, passwordSalt;
+            byte[] passwordHash, passwordSalt;
             HashingHelper.CreatePasswordHash(password, out passwordHash, out passwordSalt);
             var user = new User()
             {
@@ -224,13 +230,13 @@ namespace Business.Concrete
                 }
             }
 
-            UserRelationship userReletionship = new UserRelationship
+            UserRelationship userRelationship = new UserRelationship
             {
                 UserUserId = user.Id,
                 AdminUserId = adminUserId
             };
 
-            _userRelationshipService.Add(userReletionship);
+            _userRelationshipService.Add(userRelationship);
 
             var result = _userRelationshipService.GetListDto(adminUserId).Data;
 
@@ -281,7 +287,7 @@ namespace Business.Concrete
             string link = "http://localhost:4200/forgot-password/" + value;
             string linkDescription = "Şifrenizi Tekrar Belirlemek için Tıklayın";
 
-            var mailTemplate = _mailTemplateService.GetByTemplateName("Kayıt",4);
+            var mailTemplate = _mailTemplateService.GetByTemplateName("Kayıt", 4);
             string templateBody = mailTemplate.Data.Value;
             templateBody = templateBody.Replace("{{title}}", subject);
             templateBody = templateBody.Replace("{{message}}", body);
