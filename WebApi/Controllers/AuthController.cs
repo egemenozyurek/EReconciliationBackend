@@ -1,5 +1,6 @@
 using Business.Abstract;
 using Business.Constants;
+using Core.Utilities.Hashing;
 using Entities.Concrete;
 using Entities.Dtos;
 using Microsoft.AspNetCore.Mvc;
@@ -11,10 +12,12 @@ namespace WebApi.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly IForgotPasswordService _forgotPasswordService;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthService authService, IForgotPasswordService forgotPasswordService)
         {
             _authService = authService;
+            _forgotPasswordService = forgotPasswordService;
         }
 
         [HttpPost("registersecondaccount")]
@@ -72,22 +75,35 @@ namespace WebApi.Controllers
             var userToLogin = _authService.Login(userForLogin);
             if (!userToLogin.Success)
             {
-                return BadRequest(userToLogin);
+                return BadRequest(userToLogin.Message);
             }
 
-            var result = _authService.CreateAccessToken(userToLogin.Data, 1);
-            if (result.Success)
+            if (userToLogin.Data.IsActive)
             {
-                return Ok(result.Data);
+                if (userToLogin.Data.MailConfirm)
+                {
+                    var userCompany = _authService.GetCompany(userToLogin.Data.Id).Data;
+                    var result = _authService.CreateAccessToken(userToLogin.Data, userCompany.CompanyId);
+                    if (result.Success)
+                    {
+                        return Ok(result);
+                    }
+                    return BadRequest(result);
+                }
+                return BadRequest("Gelen onay mailini cevaplamalısınız. Mail adresinizi onaylamadan sisteme giriş yapamazsınız!");
             }
-
-            return BadRequest(result.Message);
+            return BadRequest("Kullanıcı pasif durumda. Aktif etmek için yöneticinize danışın.");
         }
 
         [HttpGet("confirmuser")]
         public IActionResult ConfirmUser(string value)
         {
             var user = _authService.GetByMailConfirmValue(value).Data;
+            if (user.MailConfirm)
+            {
+                return BadRequest("Kullanıcı maili zaten onaylı. Aynı maili tekrar onaylayamazsınız");
+            }
+
             user.MailConfirm = true;
             user.MailConfirmDate = DateTime.Now;
             var result = _authService.Update(user);
@@ -95,6 +111,7 @@ namespace WebApi.Controllers
             {
                 return Ok(result);
             }
+
             return BadRequest(result.Message);
         }
 
@@ -114,6 +131,83 @@ namespace WebApi.Controllers
             }
 
             var result = _authService.SendConfirmEmailAgain(user);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+
+            return BadRequest(result.Message);
+        }
+
+        [HttpGet("forgotpassword")]
+        public IActionResult ForgotPassword(string email)
+        {
+            var user = _authService.GetByEmail(email).Data;
+
+            if (user is null)
+            {
+                return BadRequest("Kullanıcı Bulunamadı");
+            }
+
+            var lists = _forgotPasswordService.GetListByUserId(user.Id).Data;
+            foreach (var item in lists)
+            {
+                item.IsActive = false;
+                _forgotPasswordService.Update(item);
+            }
+
+            var forgotPassword = _forgotPasswordService.CreateForgotPassword(user).Data;
+
+            var result = _authService.SendForgotPasswordEmail(user, forgotPassword.Value);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result.Message);
+        }
+
+        [HttpGet("forgotPasswordLinkCheck")]
+        public IActionResult ForgotPasswordLinkCheck(string value)
+        {
+            var result = _forgotPasswordService.GetForgotPassword(value);
+            if (result is null)
+            {
+                return BadRequest("Tıkladığınız link geçersiz");
+            }
+
+            if (result.IsActive == true)
+            {
+                DateTime date1 = DateTime.Now.AddHours(-1);
+                DateTime date2 = DateTime.Now;
+                if (result.SendDate >= date1 && result.SendDate <= date2)
+                {
+                    return Ok(true);
+                }
+                else
+                {
+                    return BadRequest("Tıkladığınız link geçersiz");
+                }
+            }
+            else
+            {
+                return BadRequest("Tıkladığınız link geçersiz");
+            }
+        }
+
+        [HttpPost("changePasswordToForgotPassword")]
+        public IActionResult ChangePasswordToForgotPassword(ForgotPasswordDto passwordDto)
+        {
+            var forgotPasswordResult = _forgotPasswordService.GetForgotPassword(passwordDto.Value);
+            forgotPasswordResult.IsActive = false;
+            _forgotPasswordService.Update(forgotPasswordResult);
+
+            var userResult = _authService.GetById(forgotPasswordResult.UserId).Data;
+            byte[] passwordHash, passwordSalt;
+            HashingHelper.CreatePasswordHash(passwordDto.Password, out passwordHash, out passwordSalt);
+            userResult.PasswordHash = passwordHash;
+            userResult.PasswordSalt = passwordSalt;
+
+            var result = _authService.ChangePassword(userResult);
             if (result.Success)
             {
                 return Ok(result);

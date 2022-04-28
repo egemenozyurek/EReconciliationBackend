@@ -49,6 +49,18 @@ namespace Business.DependencyResolver.Autofac
 
             builder.RegisterType<MailTemplateManager>().As<IMailTemplateService>();
             builder.RegisterType<EfMailTemplateDal>().As<IMailTemplateDal>();
+
+            builder.RegisterType<UserRelationshipManager>().As<IUserRelationshipService>();
+            builder.RegisterType<EfUserRelationshipDal>().As<IUserRelationshipDal>();
+
+            builder.RegisterType<UserThemeOptionManager>().As<IUserThemeOptionService>();
+            builder.RegisterType<EfUserThemeOptionDal>().As<IUserThemeOptionDal>();
+
+            builder.RegisterType<ForgotPasswordManager>().As<IForgotPasswordService>();
+            builder.RegisterType<EfForgotPassswordDal>().As<IForgotPasswordDal>();
+
+            builder.RegisterType<TermAndConditionManager>().As<ITermAndConditionService>();
+            builder.RegisterType<EfTermAndConditionDal>().As<ITermAndConditionDal>();
         }
     }
 }
