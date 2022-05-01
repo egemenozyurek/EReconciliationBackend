@@ -4,7 +4,7 @@ using Core.Utilities.Interceptors;
 
 namespace Core.Aspects.Autofac.Transactions
 {
-    public class TransactionsScopeAspect : MethodInterception
+    public class TransactionScopeAspect : MethodInterception
     {
         public override void Intercept(IInvocation invocation)
         {
@@ -15,7 +15,7 @@ namespace Core.Aspects.Autofac.Transactions
                     invocation.Proceed();
                     transactionScope.Complete();
                 }
-                catch (System.Exception)
+                catch (Exception)
                 {
                     transactionScope.Dispose();
                     throw;
