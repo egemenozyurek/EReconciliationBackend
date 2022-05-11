@@ -4,15 +4,15 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace WebApi.Controllers
 {
-    [Route("[controller]")]
+    [Route("[controller]s")]
     [ApiController]
-    public class CurrencyAccountsController : ControllerBase
+    public class BaBsReconciliationsController : ControllerBase
     {
-        private readonly ICurrencyAccountService _currencyAccountService;
+        private readonly IBaBsReconciliationService _baBsReconciliationService;
 
-        public CurrencyAccountsController(ICurrencyAccountService currencyAccountService)
+        public BaBsReconciliationsController(IBaBsReconciliationService baBsReconciliationService)
         {
-            _currencyAccountService = currencyAccountService;
+            _baBsReconciliationService = baBsReconciliationService;
         }
 
         [HttpPost("addFromExcel")]
@@ -22,14 +22,13 @@ namespace WebApi.Controllers
             {
                 var fileName = Guid.NewGuid().ToString() + ".xlsx";
                 var filePath = $"{Directory.GetCurrentDirectory()}/Content/{fileName}";
-
                 using (FileStream stream = System.IO.File.Create(filePath))
                 {
                     file.CopyTo(stream);
                     stream.Flush();
                 }
 
-                var result = _currencyAccountService.AddToExcel(filePath, companyId);
+                var result = _baBsReconciliationService.AddToExcel(filePath, companyId);
                 if (result.Success)
                 {
                     return Ok(result);
@@ -37,67 +36,61 @@ namespace WebApi.Controllers
 
                 return BadRequest(result.Message);
             }
-
-            return BadRequest("Dosya seçimi yapmalısınız");
+            return BadRequest("Dosya seçimi yapmadınız");
         }
 
         [HttpPost("add")]
-        public IActionResult Add(CurrencyAccount currencyAccount)
+        public IActionResult Add(BaBsReconciliation baBsReconciliation)
         {
-            var result = _currencyAccountService.Add(currencyAccount);
+            var result = _baBsReconciliationService.Add(baBsReconciliation);
             if (result.Success)
             {
-                return Ok(result);
+                return Ok();
             }
-
             return BadRequest(result.Message);
         }
 
         [HttpPut("update")]
-        public IActionResult Update(CurrencyAccount currencyAccount)
+        public IActionResult Update(BaBsReconciliation baBsReconciliation)
         {
-            var result = _currencyAccountService.Update(currencyAccount);
+            var result = _baBsReconciliationService.Update(baBsReconciliation);
             if (result.Success)
             {
                 return Ok(result);
             }
-
             return BadRequest(result.Message);
         }
 
         [HttpDelete("delete")]
-        public IActionResult Delete(CurrencyAccount currencyAccount)
+        public IActionResult Delete(BaBsReconciliation baBsReconciliation)
         {
-            var result = _currencyAccountService.Delete(currencyAccount);
+            var result = _baBsReconciliationService.Delete(baBsReconciliation);
             if (result.Success)
             {
                 return Ok(result);
             }
-
             return BadRequest(result.Message);
         }
 
-        [HttpGet("getbyid")]
-        public IActionResult GetById(int id)
+        [HttpGet("getById")]
+        public IActionResult GetById(int companyId)
         {
-            var result = _currencyAccountService.Get(id);
+            var result = _baBsReconciliationService.GetById(companyId);
             if (result.Success)
             {
                 return Ok(result);
             }
-
             return BadRequest(result.Message);
         }
 
-        [HttpGet("getlist")]
+        [HttpGet("getList")]
         public IActionResult GetList(int companyId)
         {
-            var result = _currencyAccountService.GetList(companyId);
+            var result = _baBsReconciliationService.GetList(companyId);
             if (result.Success)
             {
                 return Ok(result);
             }
-
             return BadRequest(result.Message);
         }
     }
