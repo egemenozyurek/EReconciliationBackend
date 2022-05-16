@@ -1,6 +1,8 @@
 using Business.Abstract;
+using Business.BusinessAspects;
 using Business.Constants;
 using Business.ValidationRules.FluentValidation;
+using Core.Aspect.Performance;
 using Core.Aspects.Autofac.Transactions;
 using Core.Aspects.Autofac.Validation;
 using Core.Aspects.Caching;
@@ -29,7 +31,6 @@ namespace Business.Concrete
 
         [CacheRemoveAspect("ICompanyService.Add")]
         [ValidationAspect(typeof(CompanyValidator))]
-        [TransactionScopeAspect]
         public IResult Add(Company company)
         {
             if (company.Name.Length > 10)
@@ -41,7 +42,7 @@ namespace Business.Concrete
             return new ErrorResult("Şirket adı en az 10 karakter olmalı.");
         }
 
-        [CacheRemoveAspect("ICompanyService.AddCompanyAndUserCompany")]
+        [CacheRemoveAspect("ICompanyService.Get")]
         [ValidationAspect(typeof(CompanyValidator))]
         [TransactionScopeAspect]
         public IResult AddCompanyAndUserCompany(CompanyDto companyDto)
@@ -77,11 +78,11 @@ namespace Business.Concrete
                     _userOperationClaimService.Add(userOperation);
                 }
             }
-            // var mailTemplate = _mailTemplateService.GetByCompanyId(1).Data;
-            // mailTemplate.Id = 0;
-            // mailTemplate.Type = "Mutabakat";
-            // mailTemplate.CompanyId = company.Id;
-            // _mailTemplateService.Add(mailTemplate);
+            var mailTemplate = _mailTemplateService.GetByCompanyId(1).Data;
+            mailTemplate.Id = 0;
+            mailTemplate.Type = "Mutabakat";
+            mailTemplate.CompanyId = company.Id;
+            _mailTemplateService.Add(mailTemplate);
 
             return new SuccessResult(Messages.AddedCompany);
         }
@@ -120,6 +121,8 @@ namespace Business.Concrete
             return new SuccessDataResult<List<Company>>(_companyDal.GetListByUserId(userId));
         }
 
+        [PerformanceAspect(3)]
+        [SecuredOperation("Company.Update,Admin")]
         [CacheRemoveAspect("ICompanyService.Update")]
         public IResult Update(Company company)
         {

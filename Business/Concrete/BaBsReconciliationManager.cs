@@ -1,5 +1,7 @@
 using Business.Abstract;
+using Business.BusinessAspects;
 using Business.Constants;
+using Core.Aspect.Performance;
 using Core.Aspects.Autofac.Transactions;
 using Core.Aspects.Caching;
 using Core.Utilities.Results.Abstract;
@@ -28,7 +30,8 @@ namespace Business.Concrete
             _mailParameterService = mailParameterService;
         }
 
-        [CacheRemoveAspect("IBaBsReconciliationService.Add")]
+        [PerformanceAspect(3)]
+        [CacheRemoveAspect("IBaBsReconciliationService.Get")]
         public IResult Add(BaBsReconciliation babsReconciliation)
         {
             string guid = Guid.NewGuid().ToString();
@@ -37,7 +40,9 @@ namespace Business.Concrete
             return new SuccessResult(Messages.AddedBaBsReconciliation);
         }
 
-        [CacheRemoveAspect("IBaBsReconciliationService.AddToExcel")]
+        [PerformanceAspect(3)]
+        [SecuredOperation("BaBsReconciliation.Add,Admin")]
+        [CacheRemoveAspect("IBaBsReconciliationService.Get")]
         [TransactionScopeAspect]
         public IResult AddToExcel(string filePath, int companyId)
         {
@@ -85,43 +90,56 @@ namespace Business.Concrete
             return new SuccessResult(Messages.AddedBaBsReconciliation);
         }
 
-        [CacheRemoveAspect("IBaBsReconciliationService.Delete")]
+        [PerformanceAspect(3)]
+        [SecuredOperation("BaBsReconciliation.Delete,Admin")]
+        [CacheRemoveAspect("IBaBsReconciliationService.Get")]
         public IResult Delete(BaBsReconciliation babsReconciliation)
         {
             _baBsReconciliationDal.Delete(babsReconciliation);
             return new SuccessResult(Messages.DeletedBaBsReconciliation);
         }
 
+        [PerformanceAspect(3)]
         [CacheAspect(60)]
         public IDataResult<BaBsReconciliation> GetByCode(string code)
         {
             return new SuccessDataResult<BaBsReconciliation>(_baBsReconciliationDal.Get(p => p.Guid == code));
         }
 
+        [PerformanceAspect(3)]
+        [SecuredOperation("BaBsReconciliation.Get,Admin")]
         [CacheAspect(60)]
         public IDataResult<BaBsReconciliation> GetById(int id)
         {
             return new SuccessDataResult<BaBsReconciliation>(_baBsReconciliationDal.Get(p => p.Id == id));
         }
 
+        [PerformanceAspect(3)]
+        [SecuredOperation("BaBsReconciliation.GetList,Admin")]
         [CacheAspect(60)]
         public IDataResult<List<BaBsReconciliation>> GetList(int companyId)
         {
             return new SuccessDataResult<List<BaBsReconciliation>>(_baBsReconciliationDal.GetList(p => p.CompanyId == companyId));
         }
 
+        [PerformanceAspect(3)]
+        [SecuredOperation("BaBsReconciliation.GetList,Admin")]
         [CacheAspect(60)]
         public IDataResult<List<BaBsReconciliation>> GetListByCurrencyAccountId(int currencyAccount)
         {
             return new SuccessDataResult<List<BaBsReconciliation>>(_baBsReconciliationDal.GetList(p => p.CurrencyAccountId == currencyAccount));
         }
 
+        [PerformanceAspect(3)]
+        [SecuredOperation("BaBsReconciliation.GetList,Admin")]
         [CacheAspect(60)]
         public IDataResult<List<BaBsReconciliationDto>> GetListDto(int companyId)
         {
             return new SuccessDataResult<List<BaBsReconciliationDto>>(_baBsReconciliationDal.GetAllDto(companyId));
         }
 
+        [PerformanceAspect(3)]
+        [SecuredOperation("BaBsReconciliation.SendMail,Admin")]
         public IResult SendReconciliationMail(BaBsReconciliationDto babsReconciliationDto)
         {
             string subject = "Mutabakat Maili";
@@ -159,7 +177,9 @@ namespace Business.Concrete
             return new SuccessResult(Messages.MailSendSucessful);
         }
 
-        [CacheRemoveAspect("IBaBsReconciliationService.Update")]
+        [PerformanceAspect(3)]
+        [SecuredOperation("BaBsReconciliation.Update,Admin")]
+        [CacheRemoveAspect("IBaBsReconciliationService.Get")]
         public IResult Update(BaBsReconciliation babsReconciliationn)
         {
             _baBsReconciliationDal.Update(babsReconciliationn);

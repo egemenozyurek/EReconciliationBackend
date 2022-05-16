@@ -1,4 +1,5 @@
 using Business.Abstract;
+using Business.BusinessAspects;
 using Business.Constants;
 using Core.Entities.Concrete;
 using Core.Utilities.Results.Abstract;
@@ -23,17 +24,20 @@ namespace Business.Concrete
             return new SuccessResult(Messages.AddedUserOperationClaim);
         }
 
+        [SecuredOperation("Admin,UserOperationClaim.Delete")]
         public IResult Delete(UserOperationClaim userOperationClaim)
         {
             _userOperationClaimDal.Delete(userOperationClaim);
             return new SuccessResult(Messages.DeletedUserOperationClaim);
         }
 
+        [SecuredOperation("Admin,UserOperationClaim.Get")]
         public IDataResult<UserOperationClaim> GetById(int id)
         {
             return new SuccessDataResult<UserOperationClaim>(_userOperationClaimDal.Get(i => i.Id == id));
         }
 
+        [SecuredOperation("Admin,UserOperationClaim.GetList")]
         public IDataResult<List<UserOperationClaim>> GetList(int userId, int companyId)
         {
             return new SuccessDataResult<List<UserOperationClaim>>(_userOperationClaimDal.GetList(p=> p.UserId == userId && p.CompanyId == companyId));
@@ -44,6 +48,7 @@ namespace Business.Concrete
             return new SuccessDataResult<List<UserOperationClaimDto>>(_userOperationClaimDal.GetListDto(userId,companyId));
         }
 
+        [SecuredOperation("Admin,UserOperationClaim.Update")]
         public IResult Update(UserOperationClaim userOperationClaim)
         {
             _userOperationClaimDal.Update(userOperationClaim);

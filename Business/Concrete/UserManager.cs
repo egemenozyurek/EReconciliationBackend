@@ -2,6 +2,8 @@ using Business.Abstract;
 using Business.BusinessAspects;
 using Business.Constants;
 using Business.ValidationRules.FluentValidation;
+using Core.Aspect.Performance;
+using Core.Aspects.Autofac.Transactions;
 using Core.Aspects.Autofac.Validation;
 using Core.Aspects.Caching;
 using Core.Entities.Concrete;
@@ -87,16 +89,21 @@ namespace Business.Concrete
             return new SuccessDataResult<List<Company>>(_userDal.GetUserCompanyList(value));
         }
 
+        [PerformanceAspect(3)]
+        [SecuredOperation("User.GetList,Admin")]
         public IDataResult<List<UserCompanyDtoForList>> GetUserList(int companyId)
         {
             return new SuccessDataResult<List<UserCompanyDtoForList>>(_userDal.GetUserList(companyId));
         }
 
+        [PerformanceAspect(3)]
+        [CacheRemoveAspect("IUserService.Get")]
         public void Update(User user)
         {
             _userDal.Update(user);
         }
 
+        [SecuredOperation("User.Update,Admin")]
         public IResult UpdateOperationClaim(OperationClaimForUserListDto operationClaim)
         {
             if (operationClaim.Status is true)
@@ -120,6 +127,7 @@ namespace Business.Concrete
             return new SuccessResult(Messages.UpdatedUserOperationClaim);
         }
 
+        [CacheRemoveAspect("IUserService.Get")]
         public IResult UpdateResult(UserForRegisterToSecondAccountDto userForRegister)
         {
             var findUser = _userDal.Get(i => i.Id == userForRegister.Id);
@@ -138,6 +146,7 @@ namespace Business.Concrete
             return new SuccessResult(Messages.UpdatedUser);
         }
 
+        [TransactionScopeAspect]
         public IResult UserCompanyAdd(int userId, int companyId)
         {
             _companyService.UserCompanyAdd(userId, companyId);
@@ -161,6 +170,7 @@ namespace Business.Concrete
             return new SuccessResult(Messages.AddedUserCompanyReletionShip);
         }
 
+        [TransactionScopeAspect]
         public IResult UserCompanyDelete(int userId, int companyId)
         {
             var userOperationClaims = _userOperationClaimService.GetList(userId, companyId).Data;
@@ -176,6 +186,7 @@ namespace Business.Concrete
             return new SuccessResult(Messages.DeletedUserCompanyReletionShip);
         }
 
+        [TransactionScopeAspect]
         public IResult UserDelete(int userId)
         {
             var userCompanies = _userCompanyService.GetListByUserId(userId);

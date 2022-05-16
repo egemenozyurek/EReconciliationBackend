@@ -1,4 +1,5 @@
 using Business.Abstract;
+using Business.BusinessAspects;
 using Business.Constants;
 using Core.Utilities.Results.Abstract;
 using Core.Utilities.Results.Concrete;
@@ -21,6 +22,7 @@ namespace Business.Concrete
             return new SuccessDataResult<TermAndCondition>(_termAndConditionDal.GetList().FirstOrDefault());
         }
 
+        [SecuredOperation("Admin")]
         public IResult Update(TermAndCondition termAndCondition)
         {
             var result = _termAndConditionDal.GetList().FirstOrDefault();
