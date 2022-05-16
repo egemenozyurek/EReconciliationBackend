@@ -1,7 +1,9 @@
 using Business.Abstract;
+using Business.BusinessAspects;
 using Business.Constants;
 using Business.ValidationRules.FluentValidation;
 using Core.Aspects.Autofac.Validation;
+using Core.Aspects.Caching;
 using Core.Entities.Concrete;
 using Core.Utilities.Hashing;
 using Core.Utilities.Results.Abstract;
@@ -33,6 +35,7 @@ namespace Business.Concrete
             _userThemeOptionService = userThemeOptionService;
         }
 
+        [CacheRemoveAspect("IUserService.Get")]
         [ValidationAspect(typeof(UserValidator))]
         public void Add(User user)
         {
@@ -44,21 +47,25 @@ namespace Business.Concrete
             return new SuccessDataResult<List<AdminCompaniesForUserDto>>(_userDal.GetAdminCompaniesForUser(adminUserId, userUserId));
         }
 
+        [CacheAspect(60)]
         public User GetById(int id)
         {
             return _userDal.Get(u => u.Id == id);
         }
 
+        [CacheAspect(60)]
         public IDataResult<User> GetByIdToResult(int id)
         {
             return new SuccessDataResult<User>(_userDal.Get(u => u.Id == id));
         }
 
+        [CacheAspect(60)]
         public User GetByMail(string email)
         {
             return _userDal.Get(m => m.Email == email);
         }
-
+        
+        [CacheAspect(60)]
         public User GetByMailConfirmValue(string value)
         {
             return _userDal.Get(p => p.MailConfirmValue == value);
@@ -69,6 +76,7 @@ namespace Business.Concrete
             return _userDal.GetClaims(user, companyId);
         }
 
+        [SecuredOperation("User.Update,Admin")]
         public IDataResult<List<OperationClaimForUserListDto>> GetOperationClaimListForUser(string value, int companyId)
         {
             return new SuccessDataResult<List<OperationClaimForUserListDto>>(_userDal.GetOperationClaimListForUser(value, companyId));
